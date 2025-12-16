@@ -9,6 +9,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ShopDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+builder.Services.AddScoped<Kurs_db.Services.OrderService>();
+
 // 2. Додаємо контролери
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

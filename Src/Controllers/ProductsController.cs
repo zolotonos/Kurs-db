@@ -16,11 +16,16 @@ namespace Kurs_db.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 10;
+
             return await _context.Products
                 .Where(p => p.IsDeleted == false)
-                .OrderBy(p => p.Name)           
+                .OrderBy(p => p.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize) 
                 .ToListAsync();
         }
 

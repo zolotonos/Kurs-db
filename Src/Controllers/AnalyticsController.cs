@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Kurs_db.Models;
+using Kurs_db.Services;
 
 namespace Kurs_db.Controllers
 {
@@ -8,41 +7,23 @@ namespace Kurs_db.Controllers
     [Route("api/[controller]")]
     public class AnalyticsController : ControllerBase
     {
-        private readonly ShopDbContext _context;
+        private readonly AnalyticsService _analyticsService;
 
-        public AnalyticsController(ShopDbContext context)
+        public AnalyticsController(AnalyticsService analyticsService)
         {
-            _context = context;
+            _analyticsService = analyticsService;
         }
 
-        // GET: api/analytics/top-products
-        // Цей метод виконує вимогу "Складні аналітичні запити"
-        // Використовує: JOIN, GROUP BY, SUM, ORDER BY
         [HttpGet("top-products")]
-        public async Task<ActionResult<List<ProductAnalyticsDto>>> GetTopSellingProducts()
+        public async Task<IActionResult> GetTopProducts()
         {
-            var report = await _context.OrderItems
-                .Include(oi => oi.Product) // Це JOIN з таблицею Product
-                .GroupBy(oi => new { oi.ProductId, oi.Product.Name }) // Групуємо по товару
-                .Select(g => new ProductAnalyticsDto
-                {
-                    ProductName = g.Key.Name,
-                    TotalUnitsSold = g.Sum(oi => oi.Quantity), // Агрегатна функція SUM
-                    TotalRevenue = g.Sum(oi => oi.Quantity * oi.UnitPrice) // Рахуємо виручку
-                })
-                .OrderByDescending(x => x.TotalRevenue) // Сортуємо: найприбутковіші зверху
-                .Take(5) // Беремо топ-5
-                .ToListAsync();
-
-            return Ok(report);
+            return Ok(await _analyticsService.GetTopProductsAsync());
         }
-    }
 
-    // DTO для звіту (щоб виводити гарний JSON)
-    public class ProductAnalyticsDto
-    {
-        public string ProductName { get; set; } = string.Empty;
-        public int TotalUnitsSold { get; set; }
-        public decimal TotalRevenue { get; set; }
+        [HttpGet("best-customers")]
+        public async Task<IActionResult> GetBestCustomers()
+        {
+            return Ok(await _analyticsService.GetBestCustomersAsync());
+        }
     }
 }

@@ -1,19 +1,24 @@
 using Kurs_db.Models;
+using Kurs_db.Services; // ОБОВ'ЯЗКОВО: Додати цей using, щоб бачити сервіси
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
-AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
-
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. ПІДКЛЮЧЕННЯ ДО БАЗИ (Бере рядок з appsettings.json)
+// 1. ПІДКЛЮЧЕННЯ ДО БАЗИ (Бере рядок з appsettings.json або змінних оточення)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ShopDbContext>(options =>
     options.UseNpgsql(connectionString));
 
-builder.Services.AddScoped<Kurs_db.Services.OrderService>();
+// =========================================================
+// 2. РЕЄСТРАЦІЯ СЕРВІСІВ (Це те, чого не вистачало!)
+// =========================================================
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<AnalyticsService>();
+// =========================================================
 
-// 2. Додаємо контролери
+// 3. Додаємо контролери
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -21,18 +26,16 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
 
-// 3. Сваггер (документація API)
+// 4. Сваггер (документація API)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 // Налаштування HTTP пайплайну
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// Вмикаємо Swagger навіть якщо не Development, щоб ви могли показати його викладачу
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthorization();
 app.MapControllers();

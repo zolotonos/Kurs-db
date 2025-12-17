@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using Kurs_db.Services;
+using Microsoft.EntityFrameworkCore;
 using Kurs_db.Models;
 
 namespace Kurs_db.Controllers
@@ -8,39 +8,58 @@ namespace Kurs_db.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductService _productService;
+        private readonly ShopDbContext _context;
 
-        public ProductsController(ProductService productService)
+        public ProductsController(ShopDbContext context)
         {
-            _productService = productService;
+            _context = context;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetProducts()
+        public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
-            return Ok(await _productService.GetAllProductsAsync());
+            return await _context.Products
+                .Where(p => p.IsDeleted == false)
+                .OrderBy(p => p.Name)           
+                .ToListAsync();
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Product>> GetProduct(Guid id)
+        {
+            var product = await _context.Products.FindAsync(id);
+
+            if (product == null)
+            {
+                return NotFound();
+            }
+
+            return product;
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateProduct(Product product)
+        public async Task<ActionResult<Product>> CreateProduct(Product product)
         {
-            var created = await _productService.AddProductAsync(product);
-            return Ok(created);
+            product.ProductId = Guid.NewGuid();
+            product.IsDeleted = false; 
+            
+            _context.Products.Add(product);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, product);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            await _productService.SoftDeleteProductAsync(id);
-            return NoContent();
-        }
+            var product = await _context.Products.FindAsync(id);
+            if (product == null) return NotFound();
 
-        // Новий ендпоінт для 2-го студента
-        [HttpPut("bulk-raise-price")]
-        public async Task<IActionResult> RaisePrices(decimal percent)
-        {
-            await _productService.BulkUpdatePriceAsync(percent);
-            return Ok(new { Message = "Ціни успішно піднято" });
+            product.IsDeleted = true;
+            
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
     }
 }

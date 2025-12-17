@@ -12,34 +12,28 @@ namespace Kurs_db.Services
             _context = context;
         }
 
-        // Цей метод створює замовлення, додає товари і списує їх зі складу
-        // Все це відбувається в одній транзакції (вимога методички)
         public async Task<Models.Order> CreateOrderAsync(Guid customerId, Guid addressId, Dictionary<Guid, int> productsWithQuantity)
         {
-            // 1. Починаємо транзакцію
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                // Перевірка, чи існує клієнт
                 var customer = await _context.Customers.FindAsync(customerId);
                 if (customer == null) throw new Exception("Клієнта не знайдено");
 
-                // 2. Створюємо "шапку" замовлення
                 var order = new Models.Order
                 {
                     OrderId = Guid.NewGuid(),
                     CustomerId = customerId,
                     AddressId = addressId,
                     OrderDate = DateTime.UtcNow,
-                    Status = "Pending", // Статус за замовчуванням
+                    Status = "Pending", 
                     TotalAmount = 0
                 };
 
                 _context.Orders.Add(order);
                 decimal totalAmount = 0;
 
-                // 3. Проходимося по списку товарів
                 foreach (var item in productsWithQuantity)
                 {
                     var productId = item.Key;
@@ -50,18 +44,14 @@ namespace Kurs_db.Services
                     if (product == null)
                         throw new Exception($"Товар {productId} не знайдено");
 
-                    // ВАЛІДАЦІЯ: Чи вистачає товару на складі?
                     if (product.StockQuantity < quantity)
                         throw new Exception($"Недостатньо товару '{product.Name}' на складі. Доступно: {product.StockQuantity}");
 
-                    // Зменшуємо склад
                     product.StockQuantity -= quantity;
 
-                    // Рахуємо суму
                     var lineTotal = product.Price * quantity;
                     totalAmount += lineTotal;
 
-                    // Додаємо запис в OrderItem
                     var orderItem = new OrderItem
                     {
                         OrderItemId = Guid.NewGuid(),
@@ -75,24 +65,19 @@ namespace Kurs_db.Services
 
                 order.TotalAmount = totalAmount;
 
-                // 4. Зберігаємо всі зміни в БД
                 await _context.SaveChangesAsync();
 
-                // 5. Підтверджуємо транзакцію (якщо дійшли сюди - все ок)
                 await transaction.CommitAsync();
 
                 return order;
             }
             catch (Exception)
             {
-                // Якщо була помилка - скасовуємо все
                 await transaction.RollbackAsync();
                 throw;
             }
         }
 
-        // === НОВИЙ МЕТОД (UPDATE) ===
-        // Метод для зміни статусу замовлення
         public async Task UpdateOrderStatusAsync(Guid orderId, string newStatus)
         {
             var order = await _context.Orders.FindAsync(orderId);
@@ -102,10 +87,8 @@ namespace Kurs_db.Services
                 throw new Exception("Замовлення не знайдено");
             }
 
-            // Оновлюємо поле
             order.Status = newStatus;
 
-            // Зберігаємо зміни
             await _context.SaveChangesAsync();
         }
     }

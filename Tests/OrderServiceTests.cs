@@ -25,7 +25,6 @@ namespace Tests
         [Fact]
         public async Task CreateOrderAsync_Should_ReduceStock_And_CalculateTotal()
         {
-            // 1. Arrange
             using var context = GetInMemoryDbContext();
             
             var customerId = Guid.NewGuid();
@@ -42,10 +41,8 @@ namespace Tests
                 { productId, 2 }
             };
 
-            // 2. Act
             var order = await service.CreateOrderAsync(customerId, Guid.NewGuid(), requestItems);
 
-            // 3. Assert
             Assert.NotNull(order);
             Assert.Equal(2000, order.TotalAmount);
             
@@ -57,7 +54,6 @@ namespace Tests
         [Fact]
         public async Task CreateOrderAsync_Should_Fail_If_NotEnoughStock()
         {
-            // 1. Arrange
             using var context = GetInMemoryDbContext();
             var customerId = Guid.NewGuid();
             var productId = Guid.NewGuid();
@@ -73,7 +69,6 @@ namespace Tests
                 { productId, 10 }
             };
 
-            // 2. Act & Assert
             await Assert.ThrowsAsync<Exception>(async () => 
             {
                 await service.CreateOrderAsync(customerId, Guid.NewGuid(), requestItems);

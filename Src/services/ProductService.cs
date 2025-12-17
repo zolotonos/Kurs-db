@@ -12,16 +12,14 @@ namespace Kurs_db.Services
             _context = context;
         }
 
-        // 1. GET (Простий)
         public async Task<List<Product>> GetAllProductsAsync()
         {
             return await _context.Products
-                .Where(p => p.IsDeleted == false) // ВИПРАВЛЕНО: Було !p.IsDeleted
+                .Where(p => p.IsDeleted == false) 
                 .OrderBy(p => p.Name)
                 .ToListAsync();
         }
 
-        // 2. CREATE (Простий, але через сервіс)
         public async Task<Product> AddProductAsync(Product product)
         {
             product.ProductId = Guid.NewGuid();
@@ -31,7 +29,6 @@ namespace Kurs_db.Services
             return product;
         }
 
-        // 3. DELETE (Soft Delete - Реалізовано одногрупником, перенесено сюди)
         public async Task SoftDeleteProductAsync(Guid id)
         {
             var product = await _context.Products.FindAsync(id);
@@ -41,8 +38,6 @@ namespace Kurs_db.Services
             await _context.SaveChangesAsync();
         }
 
-        // 4. UPDATE (Сценарій 2-го студента: Масове подорожчання)
-        // Вимога: "Оновлення кількох сутностей + транзакція"
         public async Task BulkUpdatePriceAsync(decimal percentage)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();

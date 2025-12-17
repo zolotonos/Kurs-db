@@ -12,13 +12,12 @@ namespace Kurs_db.Services
             _context = context;
         }
 
-        // Аналітика 1
         public async Task<List<object>> GetTopProductsAsync()
         {
             return await _context.OrderItems
                 .Include(oi => oi.Product)
-                .Where(oi => oi.Product != null) // Додатковий захист
-                .GroupBy(oi => new { oi.ProductId, ProductName = oi.Product!.Name }) // Використовуємо ! або перевірку
+                .Where(oi => oi.Product != null)
+                .GroupBy(oi => new { oi.ProductId, ProductName = oi.Product!.Name })
                 .Select(g => new 
                 {
                     ProductName = g.Key.ProductName,
@@ -29,11 +28,10 @@ namespace Kurs_db.Services
                 .ToListAsync<object>();
         }
 
-        // Аналітика 2
         public async Task<List<object>> GetBestCustomersAsync()
         {
             return await _context.Orders
-                .Where(o => o.Status == "Completed" && o.Customer != null) // Фільтруємо без клієнтів
+                .Where(o => o.Status == "Completed" && o.Customer != null)
                 .Include(o => o.Customer)
                 .GroupBy(o => new { o.Customer!.FirstName, o.Customer!.LastName, o.Customer!.Email })
                 .Select(g => new 

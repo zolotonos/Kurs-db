@@ -10,22 +10,18 @@ namespace Kurs_db.Controllers
     {
         private readonly OrderService _orderService;
 
-        // Тут ми отримуємо наш Сервіс через конструктор
         public OrdersController(OrderService orderService)
         {
             _orderService = orderService;
         }
 
-        // POST: api/orders/create
         [HttpPost("create")]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
         {
             try
             {
-                // Перетворюємо список товарів у словник, який чекає наш Сервіс
                 var productsDict = request.Items.ToDictionary(x => x.ProductId, x => x.Quantity);
 
-                // Викликаємо складну логіку створення (Транзакція, Валідація, Списання)
                 var order = await _orderService.CreateOrderAsync(
                     request.CustomerId,
                     request.AddressId,
@@ -36,13 +32,11 @@ namespace Kurs_db.Controllers
             }
             catch (Exception ex)
             {
-                // Якщо щось пішло не так (нема товару, помилка бази) - повертаємо помилку
                 return BadRequest(new { Error = ex.Message });
             }
         }
 
-        // === НОВИЙ МЕТОД (UPDATE) ===
-        // PATCH: api/orders/{id}/status
+
         [HttpPatch("{id}/status")]
         public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
         {
@@ -73,7 +67,6 @@ namespace Kurs_db.Controllers
         public int Quantity { get; set; }
     }
 
-    // Новий клас для запиту на зміну статусу
     public class UpdateStatusRequest
     {
         public string Status { get; set; } = string.Empty;

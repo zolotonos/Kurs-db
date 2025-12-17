@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # База даних
   db:
     image: postgres:latest
     container_name: coursework_db
@@ -12,10 +11,8 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      # Шлях до міграцій (перевірте, чи папка називається migrations чи Migrations)
       - ./migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
       - ./migrations/002_seed_data.sql:/docker-entrypoint-initdb.d/002_seed_data.sql 
-  # Ваш C# додаток
   backend:
     image: coursework-app
     build:
@@ -27,6 +24,5 @@ services:
     depends_on:
       - db
     environment:
-      # Підключення до "db" замість "localhost"
       - ASPNETCORE_ENVIRONMENT=Development
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=shop_db;Username=admin;Password=password123

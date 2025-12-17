@@ -2,6 +2,8 @@ using Kurs_db.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
 
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. ПІДКЛЮЧЕННЯ ДО БАЗИ (Бере рядок з appsettings.json)

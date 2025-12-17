@@ -1,4 +1,4 @@
-<img src="./image.png" width="50%" alt="Опис картинки">
+<img src="./Erd.png" width="50%" alt="Опис картинки">
 
 # Опис таблиць
 

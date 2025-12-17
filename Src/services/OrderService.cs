@@ -74,7 +74,7 @@ namespace Kurs_db.Services
                 }
 
                 order.TotalAmount = totalAmount;
-                
+
                 // 4. Зберігаємо всі зміни в БД
                 await _context.SaveChangesAsync();
 
@@ -89,6 +89,24 @@ namespace Kurs_db.Services
                 await transaction.RollbackAsync();
                 throw;
             }
+        }
+
+        // === НОВИЙ МЕТОД (UPDATE) ===
+        // Метод для зміни статусу замовлення
+        public async Task UpdateOrderStatusAsync(Guid orderId, string newStatus)
+        {
+            var order = await _context.Orders.FindAsync(orderId);
+
+            if (order == null)
+            {
+                throw new Exception("Замовлення не знайдено");
+            }
+
+            // Оновлюємо поле
+            order.Status = newStatus;
+
+            // Зберігаємо зміни
+            await _context.SaveChangesAsync();
         }
     }
 }

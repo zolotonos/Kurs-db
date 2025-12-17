@@ -27,8 +27,8 @@ namespace Kurs_db.Controllers
 
                 // Викликаємо складну логіку створення (Транзакція, Валідація, Списання)
                 var order = await _orderService.CreateOrderAsync(
-                    request.CustomerId, 
-                    request.AddressId, 
+                    request.CustomerId,
+                    request.AddressId,
                     productsDict
                 );
 
@@ -40,10 +40,26 @@ namespace Kurs_db.Controllers
                 return BadRequest(new { Error = ex.Message });
             }
         }
+
+        // === НОВИЙ МЕТОД (UPDATE) ===
+        // PATCH: api/orders/{id}/status
+        [HttpPatch("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(Guid id, [FromBody] UpdateStatusRequest request)
+        {
+            try
+            {
+                await _orderService.UpdateOrderStatusAsync(id, request.Status);
+                return Ok(new { Message = "Статус оновлено успішно" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message });
+            }
+        }
     }
 
-    // Це спеціальні класи (DTO), щоб зручно приймати дані від клієнта
-    // Вони описують, який JSON ми чекаємо
+    // === DTO КЛАСИ ===
+
     public class CreateOrderRequest
     {
         public Guid CustomerId { get; set; }
@@ -55,5 +71,11 @@ namespace Kurs_db.Controllers
     {
         public Guid ProductId { get; set; }
         public int Quantity { get; set; }
+    }
+
+    // Новий клас для запиту на зміну статусу
+    public class UpdateStatusRequest
+    {
+        public string Status { get; set; } = string.Empty;
     }
 }

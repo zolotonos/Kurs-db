@@ -12,6 +12,7 @@ builder.Services.AddDbContext<ShopDbContext>(options =>
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<ReviewService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

@@ -15,6 +15,8 @@ public partial class ShopDbContext : DbContext
     {
     }
 
+    public DbSet<Review> Reviews { get; set; }
+
     public virtual DbSet<Address> Addresses { get; set; }
 
     public virtual DbSet<Category> Categories { get; set; }

@@ -15,13 +15,13 @@ namespace Kurs_db.Controllers
         }
 
         [HttpGet("top-products")]
-        public async Task<IActionResult> GetTopProducts()
+        public async Task<ActionResult<List<TopProductDto>>> GetTopProducts()
         {
             return Ok(await _analyticsService.GetTopProductsAsync());
         }
 
         [HttpGet("best-customers")]
-        public async Task<IActionResult> GetBestCustomers()
+        public async Task<ActionResult<List<BestCustomerDto>>> GetBestCustomers()
         {
             return Ok(await _analyticsService.GetBestCustomersAsync());
         }

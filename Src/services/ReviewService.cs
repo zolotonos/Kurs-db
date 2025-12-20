@@ -14,7 +14,6 @@ namespace Kurs_db.Services
 
         public async Task<Review> AddReviewAsync(Review review)
         {
-            // Валідація зовнішніх ключів перед вставкою
             var productExists = await _context.Products.AnyAsync(p => p.ProductId == review.ProductId);
             if (!productExists) 
                 throw new KeyNotFoundException($"Product with ID {review.ProductId} not found.");
@@ -26,7 +25,6 @@ namespace Kurs_db.Services
             review.ReviewId = Guid.NewGuid();
             review.CreatedAt = DateTime.UtcNow;
             
-            // Очищуємо навігаційні властивості, щоб EF Core не намагався створити дублікати
             review.Product = null;
             review.Customer = null;
 
@@ -36,18 +34,16 @@ namespace Kurs_db.Services
             return review;
         }
 
-        // Реалізація теми "JOINs" (Left Join з таблицею Customers)
         public async Task<List<Review>> GetReviewsByProductAsync(Guid productId)
         {
             return await _context.Reviews
-                .AsNoTracking() // Оптимізація для читання
+                .AsNoTracking() 
                 .Where(r => r.ProductId == productId)
                 .Include(r => r.Customer) 
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
         }
 
-        // Реалізація теми "Aggregation Functions" (AVG)
         public async Task<double> GetAverageRatingAsync(Guid productId)
         {
             try
@@ -62,7 +58,6 @@ namespace Kurs_db.Services
             }
         }
 
-        // Реалізація теми "GROUP BY": Розподіл оцінок (скільки 5-рок, 4-ок тощо)
         public async Task<Dictionary<int, int>> GetRatingDistributionAsync(Guid productId)
         {
             return await _context.Reviews

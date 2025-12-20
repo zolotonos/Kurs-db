@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Kurs_db.Models;
+using Kurs_db.Services;
 
 namespace Kurs_db.Controllers
 {
@@ -8,61 +8,47 @@ namespace Kurs_db.Controllers
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly ShopDbContext _context;
+        private readonly ProductService _productService;
 
-        public ProductsController(ShopDbContext context)
+        public ProductsController(ProductService productService)
         {
-            _context = context;
+            _productService = productService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Product>>> GetProducts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetProducts([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
+            int skip = (page - 1) * pageSize;
 
-            return await _context.Products
-                .Where(p => p.IsDeleted == false)
-                .OrderBy(p => p.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize) 
-                .ToListAsync();
+            var products = await _productService.GetProductsAsync(skip, pageSize);
+            return Ok(products);
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Product>> GetProduct(Guid id)
+        public async Task<IActionResult> GetProduct(Guid id)
         {
-            var product = await _context.Products.FindAsync(id);
-
-            if (product == null)
-            {
+            var product = await _productService.GetByIdAsync(id);
+            
+            if (product == null) 
                 return NotFound();
-            }
 
-            return product;
+            return Ok(product);
         }
 
         [HttpPost]
-        public async Task<ActionResult<Product>> CreateProduct(Product product)
+        public async Task<IActionResult> CreateProduct(Product product)
         {
-            product.ProductId = Guid.NewGuid();
-            product.IsDeleted = false; 
-            
-            _context.Products.Add(product);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetProduct), new { id = product.ProductId }, product);
+            var createdProduct = await _productService.CreateProductAsync(product);
+            return Ok(createdProduct);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(Guid id)
         {
-            var product = await _context.Products.FindAsync(id);
-            if (product == null) return NotFound();
-
-            product.IsDeleted = true;
+            var success = await _productService.DeleteProductAsync(id);
             
-            await _context.SaveChangesAsync();
+            if (!success) 
+                return NotFound();
 
             return NoContent();
         }
